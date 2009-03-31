@@ -56,7 +56,7 @@ public class PerCollection extends SimpleStatsReporter {
 	    else {
 		out.write("<td class=\"total\">");
 	    }
-	    out.write("<strong>" + countTotal + "</strong></td>");
+	    out.write(countTotal + "</strong></td>");
 	    out.write("</tr>\n\n");
 	}
 

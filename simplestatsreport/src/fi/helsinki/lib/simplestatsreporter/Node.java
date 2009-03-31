@@ -152,7 +152,7 @@ public class Node {
 	else {
 	    out.write("<td class=\"total\">");
 	}
-	out.write("<strong>" + countTotal + "</strong></td>");
+	out.write(countTotal + "</td>");
 
 	out.write("</tr>\n\n");
 
