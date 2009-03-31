@@ -368,7 +368,7 @@ def update_id_name_handle_table(cursor, table_name, id_column_name, nodes):
     insert_string = ("INSERT INTO %s (%s) VALUES (%%s, %%s, %%s)" %
                      (table_name, names))
 
-    update_string = ("UPDATE %s SET (name, handle) = (%%s, %%s) " +
+    update_string = ("UPDATE %s SET name = %%s, handle = %%s " +
                      "WHERE %s = %%s") % (table_name, id_column_name)
                       
     for node in nodes:
