@@ -336,8 +336,8 @@ def update_download_table(cursor, table_name, id_column_name, nodes, time):
     names = id_column_name + ', time, count'
     cursor.execute("SELECT %s FROM %s" % (names, table_name))
     rows = cursor.fetchall()
-    existing_triples = ImmutableSet(tuple(x) for x in rows)
-    existing_pairs = ImmutableSet((x[0], x[1]) for x in rows)
+    existing_triples = ImmutableSet([tuple(x) for x in rows])
+    existing_pairs = ImmutableSet([(x[0], x[1]) for x in rows])
 
     insert_string = ("INSERT INTO %s (%s) VALUES (%%s, %s, %%s)" %
                      (table_name, names, time))
@@ -363,7 +363,7 @@ def update_id_name_handle_table(cursor, table_name, id_column_name, nodes):
     cursor.execute("SELECT %s FROM %s" % (names, table_name))
     rows = cursor.fetchall()
     existing_ids = ImmutableSet([x[0] for x in rows])
-    existing_tuples = ImmutableSet(tuple(x) for x in rows)
+    existing_tuples = ImmutableSet([tuple(x) for x in rows])
 
     insert_string = ("INSERT INTO %s (%s) VALUES (%%s, %%s, %%s)" %
                      (table_name, names))
@@ -374,7 +374,7 @@ def update_id_name_handle_table(cursor, table_name, id_column_name, nodes):
     for node in nodes:
         if node.my_id not in existing_ids:
             cursor.execute(insert_string, (node.my_id, node.name, node.handle))
-        elif (node.my_id, name, node.handle) not in existing_tuples:
+        elif (node.my_id, node.name, node.handle) not in existing_tuples:
             cursor.execute(update_string, (node.name, node.handle, node.my_id))
         else:
             # The node is already in the table and has correct values.
