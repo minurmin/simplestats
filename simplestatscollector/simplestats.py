@@ -239,6 +239,7 @@ def count_downloads_from_logs(ip_exclude_file, log_dir, bitstreams,
                               start_time=None, stop_time=None):
 
     ips_to_exclude = read_ip_exclude_file(ip_exclude_file)
+    pattern = re.compile('ip_addr=(.*?):')
 
     for filename in glob.glob(os.path.join(log_dir, 'dspace.log*')):
 
@@ -281,7 +282,7 @@ def count_downloads_from_logs(ip_exclude_file, log_dir, bitstreams,
             # might be a whole range of addresses expressed as, for example
             # 204.123.9 or even 204.123 or 204 (althought two later cases
             # won't probably happen in practice...))
-            m = re.search('ip_addr=(.*?):', line)
+            m = pattern.search(line)
             if m:
                 ip_parts = m.group(1).split('.')
                 for i in range(4):
@@ -349,7 +350,6 @@ def update_download_table(cursor, table_name, id_column_name, nodes, time):
         count = node.get_counter(time)
         if (node.my_id, time) not in existing_pairs:
             cursor.execute(insert_string % (node.my_id, count))
-            pass
         elif (node.my_id, time, count) not in existing_triples:
             cursor.execute(update_string % (count, node.my_id))
         else:
@@ -365,18 +365,17 @@ def update_id_name_handle_table(cursor, table_name, id_column_name, nodes):
     existing_ids = ImmutableSet([x[0] for x in rows])
     existing_tuples = ImmutableSet(tuple(x) for x in rows)
 
-    insert_string = ("INSERT INTO %s (%s) VALUES (%%s, '%%s', '%%s')" %
+    insert_string = ("INSERT INTO %s (%s) VALUES (%%s, %%s, %%s)" %
                      (table_name, names))
 
-    update_string = ("UPDATE %s SET (name, handle) = ('%%s', '%%s') " +
+    update_string = ("UPDATE %s SET (name, handle) = (%%s, %%s) " +
                      "WHERE %s = %%s") % (table_name, id_column_name)
                       
     for node in nodes:
-        name = node.name.replace("'", "''")
         if node.my_id not in existing_ids:
-            cursor.execute(insert_string % (node.my_id, name, node.handle))
+            cursor.execute(insert_string, (node.my_id, node.name, node.handle))
         elif (node.my_id, name, node.handle) not in existing_tuples:
-            cursor.execute(update_string % (name, node.handle, node.my_id))
+            cursor.execute(update_string, (node.name, node.handle, node.my_id))
         else:
             # The node is already in the table and has correct values.
             pass
