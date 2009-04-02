@@ -46,11 +46,15 @@ public class FrontPage extends SimpleStatsReporter {
 	out.write("</li>");
     }
 
-    private void printSelect(StringWriter out, String name, Integer[] values) {
+    private void printSelect(StringWriter out, String name,
+			     Integer[] values, int selectedValue) {
 	out.write("<select id=\"" + name + "\" name=\"" + name + "\" >");
 	for(int i : values) {
-	    String s = String.format("%d / %d", i%100, i/100);
-	    out.write("<option value=\"" + i + "\">" + s + "</option>\n");
+	    String s1 = (selectedValue == i) ?" selected=\"selected\"" : "";
+	    String s2 = String.format("%d / %d", i%100, i/100);
+
+	    out.write(String.format("<option value=\"%d\"%s>%s</option>\n",
+				    i, s1, s2));
 	}
 	out.write("</select>");
     }
@@ -76,12 +80,12 @@ public class FrontPage extends SimpleStatsReporter {
 	out.write("<fieldset class=\"timespan\"><legend>Time span</legend>");
 	out.write("<span>");
 	out.write("<label for=\"start_time\">Start month</label>");
-	printSelect(out, "start_time", times);
+	printSelect(out, "start_time", times, times[0]);
 	out.write("</span>");
 
 	out.write("<span>");
 	out.write("<label for=\"stop_time\">End month</label>");
-	printSelect(out, "stop_time", times);
+	printSelect(out, "stop_time", times, times[times.length-1]);
 	out.write("</span>");
 
 	out.write("</fieldset>");
