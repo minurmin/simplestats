@@ -21,9 +21,11 @@ to be fast (enough).
 INSTALLATION
 ------------
 
-What you need:
+Before installing Simplestats, please make sure that you already have
+these installed:
  - DSpace (obviously)
  - Python
+ - PyGreSQL
  - Java compiler and Ant
  - PostgreSQL(*)
  - Tomcat or some other servlet container(*)
