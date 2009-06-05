@@ -72,6 +72,9 @@ class LeafNode:
         self.my_id = my_id
         self.name = name
         self.handle = handle
+        self.n_items = 0
+        self.n_bitstreams = 0
+        self.n_bytes = 0
 
     def inc_counter(self, time):
         if self.counter.has_key(time):
@@ -99,6 +102,24 @@ class Node(LeafNode):
     def add_child(self, child):
         child.parent = self
         self.children.append(child)
+
+    def count_n_items(self):
+        n_items = 0
+        for child in self.children:
+            n_items += child.count_n_items()
+        return n_items
+
+    def count_n_bitstreams(self):
+        n_bitstreams = 0
+        for child in self.children:
+            n_bitstreams += child.count_n_bitstreams()
+        return n_bitstreams
+
+    def count_n_bytes(self):
+        n_bytes = 0
+        for child in self.children:
+            n_bytes += child.count_n_bytes()
+        return n_bytes
     
 class Community(Node):
     pass
@@ -107,10 +128,15 @@ class Collection(Node):
     pass
 
 class Item(Node):
-    pass
+    def count_n_items(self):
+        return 1
 
 class Bitstream(LeafNode):
-    pass
+    def count_n_bitstreams(self):
+        return 1
+
+    def count_n_bytes(self):
+        return self.n_bytes
 
 def create_objects(cursor):
     """Checks the database to see what communities, collections, items, and
@@ -198,10 +224,13 @@ def create_objects(cursor):
     # each of our Bitsream object has an Item object as a parent:
     cursor.execute("SELECT " +
                    "item2bundle.item_id, " +
-                   "bundle2bitstream.bitstream_id " +
-                   "FROM item2bundle, bundle2bitstream " +
-                   "WHERE item2bundle.bundle_id = bundle2bitstream.bundle_id")
-    for item_id, bitstream_id in cursor.fetchall():
+                   "bundle2bitstream.bitstream_id, " +
+                   "bitstream.size_bytes " +
+                   "FROM item2bundle, bundle2bitstream, bitstream " +
+                   "WHERE item2bundle.bundle_id = bundle2bitstream.bundle_id "
+                   "AND bundle2bitstream.bitstream_id = bitstream.bitstream_id"
+                   )
+    for item_id, bitstream_id, size_bytes in cursor.fetchall():
         try:
             item = items[item_id]
         except KeyError:
@@ -209,7 +238,23 @@ def create_objects(cursor):
             continue
             
         bitstream = bitstreams[bitstream_id]
+        bitstream.n_bytes = size_bytes
         item.add_child(bitstream)
+
+    for community in communities.values():
+        community.n_items = community.count_n_items()
+        community.n_bitstreams = community.count_n_bitstreams()
+        community.n_bytes = community.count_n_bytes()
+
+    for collection in collections.values():
+        collection.n_items = collection.count_n_items()
+        collection.n_bitstreams = collection.count_n_bitstreams()
+        collection.n_bytes = collection.count_n_bytes()
+
+    for item in items.values():
+        item.n_items = item.count_n_items() # Of course, this is always 1.
+        item.n_bitstreams = item.count_n_bitstreams()
+        item.n_bytes = item.count_n_bytes()
 
     return (communities, collections, items, bitstreams)
     
@@ -357,25 +402,31 @@ def update_download_table(cursor, table_name, id_column_name, nodes, time):
             # correct -> do nothing.
             pass
         
-def update_id_name_handle_table(cursor, table_name, id_column_name, nodes):
-    names = id_column_name + ', name, handle'
-    n_columns = 3
+def update_id_name_handle_etc_table(cursor, table_name, id_column_name, nodes):
+    names = id_column_name + ', name, handle, n_items, n_bitstreams, n_bytes'
     cursor.execute("SELECT %s FROM %s" % (names, table_name))
     rows = cursor.fetchall()
     existing_ids = ImmutableSet([x[0] for x in rows])
     existing_tuples = ImmutableSet([tuple(x) for x in rows])
 
-    insert_string = ("INSERT INTO %s (%s) VALUES (%%s, %%s, %%s)" %
-                     (table_name, names))
+    insert_string = ("INSERT INTO %s (%s) " +
+                     "VALUES (%%s, %%s, %%s, %%s, %%s, %%s)") % (table_name,
+                                                                 names)
 
     update_string = ("UPDATE %s SET name = %%s, handle = %%s " +
+                     ", n_items = %%s, n_bitstreams = %%s, n_bytes = %%s " + 
                      "WHERE %s = %%s") % (table_name, id_column_name)
                       
     for node in nodes:
         if node.my_id not in existing_ids:
-            cursor.execute(insert_string, (node.my_id, node.name, node.handle))
+            cursor.execute(insert_string,
+                           (node.my_id, node.name, node.handle,
+                            node.n_items, node.n_bitstreams, node.n_bytes))
         elif (node.my_id, node.name, node.handle) not in existing_tuples:
-            cursor.execute(update_string, (node.name, node.handle, node.my_id))
+            cursor.execute(update_string,
+                           (node.name, node.handle,
+                            node.n_items, node.n_bitstreams, node.n_bytes,
+                            node.my_id))
         else:
             # The node is already in the table and has correct values.
             pass
@@ -457,15 +508,15 @@ def write_stats(cursor, communities, collections, items,
     """
 
     print "Writing communities..."
-    update_id_name_handle_table(cursor, 'community', 'community_id',
-                                communities.values())
+    update_id_name_handle_etc_table(cursor, 'community', 'community_id',
+                                    communities.values())
 
     print "Writing collections..."
-    update_id_name_handle_table(cursor, 'collection', 'collection_id',
-                                collections.values())
+    update_id_name_handle_etc_table(cursor, 'collection', 'collection_id',
+                                    collections.values())
 
     print "Writing items..."
-    update_id_name_handle_table(cursor, 'item', 'item_id', items.values())
+    update_id_name_handle_etc_table(cursor, 'item', 'item_id', items.values())
         
     # Hierarchy (relationships):
 

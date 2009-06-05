@@ -1,5 +1,8 @@
 Simplestats - collect and display DSpace monthly download statistics
 
+NOTE! If you have used earlier versions, please notice that the database
+      structure has changed. Please make sure that your database structure
+      matches the one in the file database_schema.sql.
 
 HOW IT WORKS
 ------------

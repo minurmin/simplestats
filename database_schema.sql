@@ -1,19 +1,28 @@
 CREATE TABLE community (
     community_id integer PRIMARY KEY,
     name text,
-    handle character varying(256)
+    handle character varying(256),
+    n_items integer,
+    n_bitstreams integer,
+    n_bytes bigint
 );
 
 CREATE TABLE collection (
     collection_id integer PRIMARY KEY,
     name text,
-    handle character varying(256)
+    handle character varying(256),
+    n_items integer,
+    n_bitstreams integer,
+    n_bytes bigint
 );
 
 CREATE TABLE item (
     item_id integer PRIMARY KEY,
     name text,
-    handle character varying(256)
+    handle character varying(256),
+    n_items integer,
+    n_bitstreams integer,
+    n_bytes bigint
 );
 
 

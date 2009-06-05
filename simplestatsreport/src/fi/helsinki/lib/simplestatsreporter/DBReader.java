@@ -38,7 +38,11 @@ public class DBReader {
 	    int id = rs.getInt("community_id");
 	    String name = rs.getString("name");
 	    String handle = rs.getString("handle");
-	    communities.put(id, new Community(id, name, handle));
+	    int n_items = rs.getInt("n_items");
+	    int n_bitstreams = rs.getInt("n_bitstreams");
+	    long n_bytes = rs.getLong("n_bytes");
+	    communities.put(id, new Community(id, name, handle,
+					      n_items, n_bitstreams, n_bytes));
 	}
 	return communities;
     }
@@ -73,7 +77,11 @@ public class DBReader {
 	    int id = rs.getInt("collection_id");
 	    String name = rs.getString("name");
 	    String handle = rs.getString("handle");
-	    collections.put(id, new Collection(id, name, handle));
+	    int n_items = rs.getInt("n_items");
+	    int n_bitstreams = rs.getInt("n_bitstreams");
+	    long n_bytes = rs.getLong("n_bytes");
+	    collections.put(id, new Collection(id, name, handle,
+					       n_items, n_bitstreams, n_bytes));
 	}
 	return collections;
     }
@@ -90,7 +98,11 @@ public class DBReader {
 	    int id = rs.getInt("item_id");
 	    String name = rs.getString("name");
 	    String handle = rs.getString("handle");
-	    items.put(id, new Item(id, name, handle));
+	    int n_items = rs.getInt("n_items");
+	    int n_bitstreams = rs.getInt("n_bitstreams");
+	    long n_bytes = rs.getLong("n_bytes");
+	    items.put(id, new Item(id, name, handle,
+				   n_items, n_bitstreams, n_bytes));
 	}
 	return items;
     }

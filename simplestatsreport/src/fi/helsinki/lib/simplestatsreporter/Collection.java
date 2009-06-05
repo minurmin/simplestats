@@ -5,8 +5,10 @@ import java.util.*;
 public class Collection extends Node{
 
     public Collection(int collection_id, String collection_name,
-		      String collection_handle) {
-	super(collection_id, collection_name, collection_handle);
+		      String collection_handle,
+		      int n_items, int n_bitstreams, long n_bytes) {
+	super(collection_id, collection_name, collection_handle,
+	      n_items, n_bitstreams, n_bytes);
     }
 
     public String getCSSClassStringForTableRow() {
@@ -21,7 +23,12 @@ public class Collection extends Node{
 
 	return "<td" + getCSSClassStringForTableRow() + " colspan=\"" +
 	    (maxDepth-level) + "\"><a href=\"" + link + "\">" +
-	    Misc.fi(getName()) + "</a></td>";
+	    Misc.fi(getName()) + "</a>" +
+	    " (" +
+	    getNItems() + " items, " +
+	    getNBitstreams() + " bitstreams, " +
+	    getNBytes() / (1024*1024) + " megabytes) " +
+	    "</td>";
     }
 
 

@@ -14,14 +14,21 @@ public class Node {
     private int id;
     private String name;
     private String handle;
+    private int n_items;
+    private int n_bitstreams;
+    private long n_bytes;
     private Node parent;
     private ArrayList<Node> children;
     private Hashtable<Integer, Integer> counter;
 
-    public Node(int node_id, String node_name, String node_handle) {
+    public Node(int node_id, String node_name, String node_handle,
+		int node_n_items, int node_n_bitstreams, long node_n_bytes) {
 	id = node_id;
 	name = node_name;
 	handle = node_handle;
+	n_items = node_n_items;
+	n_bitstreams = node_n_bitstreams;
+	n_bytes = node_n_bytes;
 	parent = null;
 	children = new ArrayList<Node>();
 	counter = new Hashtable<Integer, Integer>();
@@ -37,6 +44,18 @@ public class Node {
 
     public String getHandle() {
 	return handle;
+    }
+
+    public int getNItems() {
+	return n_items;
+    }
+
+    public int getNBitstreams() {
+	return n_bitstreams;
+    }
+
+    public long getNBytes() {
+	return n_bytes;
     }
 
     public void setCounter(int time, int count) {
@@ -119,7 +138,12 @@ public class Node {
     public String firstTd(int level, int maxDepth,
 			  int startTime, int stopTime) {
 	return "<td" + getCSSClassStringForTableRow() + " colspan=\"" +
-	    (maxDepth-level) + "\">" + Misc.fi(getName()) + "</td>";
+	    (maxDepth-level) + "\">" + Misc.fi(getName()) +
+	    " (" +
+	    getNItems() + " items, " +
+	    getNBitstreams() + " bitstreams, " +
+	    getNBytes() / (1024*1024) + " megabytes) " +
+	    "</td>";
     }
 
     public String printTableRow(int level, int maxDepth,
