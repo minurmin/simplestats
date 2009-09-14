@@ -80,7 +80,10 @@ public class FrontPage extends SimpleStatsReporter {
 	out.write("<fieldset class=\"timespan\"><legend>Time span</legend>");
 	out.write("<span>");
 	out.write("<label for=\"start_time\">Start month</label>");
-	printSelect(out, "start_time", times, times[0]);
+	// By default we show last 12 months (if we have statistics for
+	// that many months.
+	int index = (times.length > 12) ? times.length - 12 : 0; 
+	printSelect(out, "start_time", times, times[index]);
 	out.write("</span>");
 
 	out.write("<span>");
