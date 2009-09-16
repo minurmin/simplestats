@@ -145,9 +145,9 @@ public class All extends SimpleStatsReporter {
 	    DBReader.readCollections(stmt);
 	Hashtable<Integer, Item> items = DBReader.readItems(stmt);
 	
-	DBReader.readCommunitiesStats(stmt, communities);
-	DBReader.readCollectionsStats(stmt, collections);
-	DBReader.readItemsStats(stmt, items);
+	DBReader.readCommunitiesStats(stmt, communities, startTime, stopTime);
+	DBReader.readCollectionsStats(stmt, collections, startTime, stopTime);
+	DBReader.readItemsStats(stmt, items, startTime, stopTime);
 
 	DBReader.setRelations(stmt, communities, collections, items);
 	

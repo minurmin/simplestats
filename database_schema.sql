@@ -62,3 +62,6 @@ CREATE TABLE downloadsperitem (
     count integer DEFAULT 0 NOT NULL,
     PRIMARY KEY(item_id, "time")
 );
+
+-- This *might* make things faster.
+CREATE INDEX downloadsperitem_count_idx ON downloadsperitem (count);

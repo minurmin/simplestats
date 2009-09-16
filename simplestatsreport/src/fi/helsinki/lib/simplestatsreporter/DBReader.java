@@ -149,13 +149,24 @@ public class DBReader {
 	}
     }
 
+    /* In the following methods:
+       
+       count > 0 AND "time" >= startTime and "time" <= stopTime
+
+       is not really needed, it's there just to cut down the number
+       of rows (in an attempt to make things faster). */
+
     public static void readCommunitiesStats(Statement stmt,
-					    Hashtable communities)
+					    Hashtable communities,
+					    int startTime, int stopTime)
 	throws SQLException {
 
 	ResultSet rs;
 
-	rs = stmt.executeQuery("SELECT * FROM downloadspercommunity");
+	rs = stmt.executeQuery("SELECT * FROM downloadspercommunity WHERE " +
+			       "count > 0 AND " +
+			       "\"time\" >= " + startTime + " AND " +
+			       "\"time\" <= " + stopTime);
 	
 	while (rs.next()) {
 	    int time = rs.getInt("time");
@@ -166,12 +177,16 @@ public class DBReader {
     }
 
     public static void readCollectionsStats(Statement stmt,
-					    Hashtable collection)
+					    Hashtable collection,
+					    int startTime, int stopTime)
 	throws SQLException {
 
 	ResultSet rs;
 
-	rs = stmt.executeQuery("SELECT * FROM downloadspercollection");
+	rs = stmt.executeQuery("SELECT * FROM downloadspercollection WHERE " +
+			       "count > 0 AND " +
+			       "\"time\" >= " + startTime + " AND " +
+			       "\"time\" <= " + stopTime);
 	
 	while (rs.next()) {
 	    int time = rs.getInt("time");
@@ -182,12 +197,16 @@ public class DBReader {
 	}
     }
 
-    public static void readItemsStats(Statement stmt, Hashtable item)
+    public static void readItemsStats(Statement stmt, Hashtable item,
+				      int startTime, int stopTime)
 	throws SQLException {
 
 	ResultSet rs;
 
-	rs = stmt.executeQuery("SELECT * FROM downloadsperitem");
+	rs = stmt.executeQuery("SELECT * FROM downloadsperitem WHERE " +
+			       "count > 0 AND " +
+			       "\"time\" >= " + startTime + " AND " +
+			       "\"time\" <= " + stopTime);
 	
 	while (rs.next()) {
 	    int time = rs.getInt("time");
@@ -205,13 +224,21 @@ public class DBReader {
 
     public static void readItemsStatsForCollection(Statement stmt,
 						   Hashtable items,
-						   int collection_id)
+						   int collection_id,
+						   int startTime, int stopTime)
 	throws SQLException {
 
 	ResultSet rs;
+	String q;
 
-	rs = stmt.executeQuery("SELECT * FROM downloadsperitem WHERE item_id IN (SELECT item_id FROM collection2item WHERE collection_id = " + collection_id + ")");
+	q = "SELECT * FROM downloadsperitem WHERE " +
+	    "count > 0 AND \"time\" >= " + startTime +
+	    " AND \"time\" <= " + stopTime +
+	    " AND item_id IN " +
+	    "(SELECT item_id FROM collection2item WHERE collection_id = " +
+	    collection_id + ")";
 
+	rs = stmt.executeQuery(q);
 	while (rs.next()) {
 	    int time = rs.getInt("time");
 	    int count = rs.getInt("count");

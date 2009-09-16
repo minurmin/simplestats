@@ -80,7 +80,8 @@ public class PerCollection extends SimpleStatsReporter {
 	    DBReader.readCollections(stmt);
 	Hashtable<Integer, Item> items = DBReader.readItems(stmt);
 
-	DBReader.readItemsStatsForCollection(stmt, items, collectionId);
+	DBReader.readItemsStatsForCollection(stmt, items, collectionId,
+					     startTime, stopTime);
 
 	DBReader.setRelations(stmt, communities, collections, items);
 
