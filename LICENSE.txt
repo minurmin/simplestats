@@ -1,7 +1,11 @@
 Simplestats - collect and display DSpace monthly download statistics
 --------------------------------------------------------------------
 
-Copyright (C) 2008 Jyrki Ilva, Tiina Pasanen, Janne Pietarila, Samu Viita
+Copyright (C) 2009 Jyrki Ilva
+                   Tiina Pasanen
+                   Janne Pietarila
+                   Wouter Van Hemel
+                   Samu Viita
 
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
