@@ -25,7 +25,7 @@ public abstract class SimpleStatsReporter extends HttpServlet {
 		      HttpServletResponse response)
 	throws IOException, ServletException
     {
-	response.setContentType("text/html");
+	response.setContentType("text/html;charset=utf-8");
 	PrintWriter out = response.getWriter();
 
 	out.println("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
