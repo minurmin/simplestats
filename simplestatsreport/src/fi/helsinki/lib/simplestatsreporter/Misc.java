@@ -4,6 +4,10 @@ import java.io.*;
 
 public class Misc {
     public static String fi(String s) {
+	if (s == null) {
+	    // Probably we have bad data...
+	    return "";
+	}
 	String t = s.trim();
 	int startIndex = t.indexOf("fi=");
 	if (startIndex >= 0) {
