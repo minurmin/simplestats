@@ -328,12 +328,16 @@ def count_downloads_from_logs(ip_exclude_file, log_dir, bitstreams,
             # 204.123.9 or even 204.123 or 204 (althought two later cases
             # won't probably happen in practice...))
             m = pattern.search(line)
+            exclude_this_line = False
             if m:
                 ip_parts = m.group(1).split('.')
                 for i in range(4):
                     if '.'.join([str(x) for x in ip_parts[0:i+1]]) in \
                            ips_to_exclude[i]:
-                        continue # Skip this line.
+                        exclude_this_line = True
+                        break
+            if exclude_this_line:
+                continue # Skip this line.
 
             if log_line.is_download_action():
                 try:
