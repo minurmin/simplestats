@@ -1,3 +1,7 @@
+# Two IPs of Helsinki University:
+193.166.130.201
+193.166.130.202
+
 # The content of this file comes from http://www.iplists.com/
 
 # Alta Vista
