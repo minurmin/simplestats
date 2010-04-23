@@ -264,7 +264,7 @@ def read_ip_exclude_file(ip_exclude_file):
     f = open(ip_exclude_file, 'r')
 
     ips = filter(lambda line: re.match('^[\d\.]+$', line),
-                 [x.strip('. ') for x in f.readlines()])
+                 [x.strip('. \n') for x in f.readlines()])
 
     f.close()
 
