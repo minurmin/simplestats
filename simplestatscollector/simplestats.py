@@ -138,6 +138,14 @@ class Bitstream(LeafNode):
     def count_n_bytes(self):
         return self.n_bytes
 
+    # We have this method in order to filter out (at least)
+    # thumbnails downloads.
+    def is_original_bitstream(self):
+        try:
+            return self.bundle_name == 'ORIGINAL'
+        except AttributeError:
+            return True
+
 def create_objects(cursor):
     """Checks the database to see what communities, collections, items, and
     bitstreams we have there and constructs corresponding objects (and put
@@ -256,6 +264,27 @@ def create_objects(cursor):
         item.n_bitstreams = item.count_n_bitstreams()
         item.n_bytes = item.count_n_bytes()
 
+    # Finally, let's set bundle_name attribute for bitstreams.
+        
+    bundle_types = {}
+    cursor.execute("SELECT bundle_id, name FROM bundle")
+    for bundle_id, name in cursor.fetchall():
+        bundle_types[bundle_id] = name
+
+    cursor.execute("SELECT bundle_id, bitstream_id FROM bundle2bitstream")
+    for bundle_id, bitstream_id in cursor.fetchall():
+        try:
+            bitstream = bitstreams[bitstream_id]
+        except KeyError:
+            print "(bundle2bitstream) Bad bitstream_id: %s" % bitstream_id
+            continue
+        try:
+            bundle_type = bundle_types[bundle_id]
+        except KeyError:
+            print "(bundle2bitstream) Bad bundle_id: %s" % bundle_id
+            continue
+        bitstream.bundle_name = bundle_type
+
     return (communities, collections, items, bitstreams)
     
 
@@ -345,11 +374,14 @@ def count_downloads_from_logs(ip_exclude_file, log_dir, bitstreams,
                 except ValueError:
                     print "Bad bitstream_id"
                     continue
-                
+
                 try:
-                    item = bitstreams[bitstream_id].parent
+                    bitstream = bitstreams[bitstream_id]                
                 except KeyError:
                     continue
+                if not bitstream.is_original_bitstream():
+                    continue
+                item = bitstream.parent
                 if item == prev_item and bitstream_id != prev_bitstream_id:
                     # An item with many bitstreams: If several of those
                     # bitstreams are downloaded at a "same time"(*), count
