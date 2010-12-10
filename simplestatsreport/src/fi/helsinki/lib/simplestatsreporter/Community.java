@@ -12,4 +12,20 @@ public class Community extends Node{
     public String getCSSClassStringForTableRow() {
 	return " class=\"community\"";
     }
+
+    public String firstTd(int level, int maxDepth,
+			  int startTime, int stopTime) {
+
+	String link = "percommunity?id=" + getId() + "&amp;start_time=" +
+	    startTime + "&amp;stop_time=" + stopTime;
+
+	return "<td" + getCSSClassStringForTableRow() + " colspan=\"" +
+	    (maxDepth-level) + "\"><a href=\"" + link + "\">" +
+	    Misc.fi(getName()) + "</a>" +
+	    " (" +
+	    getNItems() + " items, " +
+	    getNBitstreams() + " bitstreams, " +
+	    getNBytes() / (1024*1024) + " megabytes) " +
+	    "</td>";
+    }
 }
