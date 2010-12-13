@@ -16,6 +16,17 @@
   </servlet-mapping>
 
   <servlet>
+    <servlet-name>percommunity</servlet-name>
+    <description>Monthly statistics for items in one community</description>
+    <servlet-class>fi.helsinki.lib.simplestatsreporter.PerCommunity</servlet-class>
+  </servlet>
+
+  <servlet-mapping>
+    <servlet-name>percommunity</servlet-name>
+    <url-pattern>/percommunity</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
     <servlet-name>percollection</servlet-name>
     <description>Monthly statistics for items in one collection</description>
     <servlet-class>fi.helsinki.lib.simplestatsreporter.PerCollection</servlet-class>
