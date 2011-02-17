@@ -133,7 +133,10 @@ class Item(Node):
 
 class Bitstream(LeafNode):
     def count_n_bitstreams(self):
-        return 1
+        if self.is_original_bitstream():
+            return 1
+        else:
+            return 0
 
     def count_n_bytes(self):
         return self.n_bytes
@@ -249,27 +252,12 @@ def create_objects(cursor):
         bitstream.n_bytes = size_bytes
         item.add_child(bitstream)
 
-    for community in communities.values():
-        community.n_items = community.count_n_items()
-        community.n_bitstreams = community.count_n_bitstreams()
-        community.n_bytes = community.count_n_bytes()
-
-    for collection in collections.values():
-        collection.n_items = collection.count_n_items()
-        collection.n_bitstreams = collection.count_n_bitstreams()
-        collection.n_bytes = collection.count_n_bytes()
-
-    for item in items.values():
-        item.n_items = item.count_n_items() # Of course, this is always 1.
-        item.n_bitstreams = item.count_n_bitstreams()
-        item.n_bytes = item.count_n_bytes()
-
-    # Finally, let's set bundle_name attribute for bitstreams.
-        
     bundle_types = {}
     cursor.execute("SELECT bundle_id, name FROM bundle")
     for bundle_id, name in cursor.fetchall():
         bundle_types[bundle_id] = name
+
+    # Let's set bundle_name attribute for bitstreams.
 
     cursor.execute("SELECT bundle_id, bitstream_id FROM bundle2bitstream")
     for bundle_id, bitstream_id in cursor.fetchall():
@@ -284,6 +272,23 @@ def create_objects(cursor):
             print "(bundle2bitstream) Bad bundle_id: %s" % bundle_id
             continue
         bitstream.bundle_name = bundle_type
+
+    # And finally count items, bitstreams, and bytes.
+
+    for community in communities.values():
+        community.n_items = community.count_n_items()
+        community.n_bitstreams = community.count_n_bitstreams()
+        community.n_bytes = community.count_n_bytes()
+
+    for collection in collections.values():
+        collection.n_items = collection.count_n_items()
+        collection.n_bitstreams = collection.count_n_bitstreams()
+        collection.n_bytes = collection.count_n_bytes()
+
+    for item in items.values():
+        item.n_items = item.count_n_items() # Of course, this is always 1.
+        item.n_bitstreams = item.count_n_bitstreams()
+        item.n_bytes = item.count_n_bytes()
 
     return (communities, collections, items, bitstreams)
     

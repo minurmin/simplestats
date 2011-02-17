@@ -1,7 +1,7 @@
 Simplestats - collect and display DSpace monthly download statistics
 --------------------------------------------------------------------
 
-Copyright (C) 2009-2010 Jyrki Ilva
+Copyright (C) 2009-2011 Jyrki Ilva
                         Tiina Pasanen
                         Janne Pietarila
                         Wouter Van Hemel
