@@ -2,11 +2,11 @@ Simplestats - collect and display DSpace monthly download statistics
 --------------------------------------------------------------------
 
 Copyright (C) 2009-2011 Jyrki Ilva
+                        Markos Mevorah
                         Tiina Pasanen
                         Janne Pietarila
                         Wouter Van Hemel
                         Samu Viita
-                        Markos Mevorah
 
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
