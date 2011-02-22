@@ -247,33 +247,6 @@ public class DBReader {
 	}
     }
 
-        public static void readItemsStatsForCommunity(Statement stmt,
-						   Hashtable items,
-						   int community_id,
-						   int startTime, int stopTime)
-	throws SQLException {
-
-	ResultSet rs;
-	String q;
-
-	q = "SELECT * FROM downloadsperitem WHERE " +
-	    "count > 0 AND \"time\" >= " + startTime +
-	    " AND \"time\" <= " + stopTime +
-	    " AND item_id IN " +
-	    "(SELECT item_id FROM collection2item INNER JOIN community2collection" +
-            " ON collection2item.collection_id=community2collection.collection_id" +
-            " WHERE community2collection.community_id = " +
-	    community_id + ")";
-
-	rs = stmt.executeQuery(q);
-	while (rs.next()) {
-	    int time = rs.getInt("time");
-	    int count = rs.getInt("count");
-	    int item_id = rs.getInt("item_id");
-	    ((Item)items.get(item_id)).setCounter(time, count);
-	}
-    }
-
 }
 
 	

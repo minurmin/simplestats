@@ -18,7 +18,7 @@ public abstract class SimpleStatsReporter extends HttpServlet {
     }
 
     public String htmlFooter() {
-	return("<div class=\"footer\"><a href=\"front\">Download statistics front page</a></div>");
+	return("<div class=\"footer\"><a href=\".\">Download statistics front page</a></div>");
     }
     
     public void doGet(HttpServletRequest request,

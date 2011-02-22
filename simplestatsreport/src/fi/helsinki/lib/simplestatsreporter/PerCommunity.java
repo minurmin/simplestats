@@ -6,10 +6,11 @@ import java.text.*;
 import javax.servlet.*;
 import javax.servlet.http.*;
 import java.sql.*;
+import java.util.ArrayList;
 
 public class PerCommunity extends SimpleStatsReporter {
 
-    private String printItems(Community community,
+    private String printItems(ArrayList<Node> allItems, Community community,
 			      int startTime, int stopTime) {
 
  	StringWriter out = new StringWriter();
@@ -29,12 +30,9 @@ public class PerCommunity extends SimpleStatsReporter {
 	out.write(Misc.monthHeaders(startTime, stopTime));
 	out.write("</tr>");
 
-        ArrayList<Node> items = new ArrayList<Node>();
-        findAllItems(community, items);
-        
-	Collections.sort(items, Node.NAME_ORDER);
+        Collections.sort(allItems, Node.NAME_ORDER);
 
-	for (Node item : items) {
+	for (Node item : allItems) {
 	    out.write("<tr>");
 	    out.write("<td><a href=\"" + Config.DSPACE_URL + "/handle/" +
 		      item.getHandle() + "\">" +
@@ -67,14 +65,16 @@ public class PerCommunity extends SimpleStatsReporter {
 	return out.toString();
     }
 
-    private void findAllItems(Node node, ArrayList<Node> items) {
+    private void findAllItemsFor(Node node, ArrayList<Node> allItems,
+                                 ArrayList<Integer> collectionIDs) {
         ArrayList<Node> children = node.getChildren();
         for (Node thisNode : children) {
             if (thisNode instanceof Community) {
-                findAllItems(thisNode, items);
+                findAllItemsFor(thisNode, allItems, collectionIDs);
             } else if (thisNode instanceof Collection) {
                 Collection thisCollection = (Collection) thisNode;
-                items.addAll(thisCollection.getChildren());
+                allItems.addAll(thisCollection.getChildren());
+                collectionIDs.add(thisCollection.getId());
             }
         }
     }
@@ -94,13 +94,17 @@ public class PerCommunity extends SimpleStatsReporter {
 	    DBReader.readCollections(stmt);
 	Hashtable<Integer, Item> items = DBReader.readItems(stmt);
 
-	DBReader.readItemsStatsForCommunity(stmt, items, communityId,
-					     startTime, stopTime);
-
 	DBReader.setRelations(stmt, communities, collections, items);
 
+        ArrayList<Integer> collectionIDs = new ArrayList<Integer>();
+        ArrayList<Node> allItems = new ArrayList<Node>();
+        findAllItemsFor(communities.get(communityId), allItems, collectionIDs);
+        for (int thisCollectionID : collectionIDs) {
+            DBReader.readItemsStatsForCollection(stmt, items, thisCollectionID,
+                                                 startTime, stopTime);
+        }
 
-	return printItems(communities.get(communityId),
+	return printItems(allItems, communities.get(communityId),
 			  startTime, stopTime);
     }
 }
