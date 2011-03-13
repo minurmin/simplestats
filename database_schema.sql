@@ -65,3 +65,7 @@ CREATE TABLE downloadsperitem (
 
 -- This *might* make things faster.
 CREATE INDEX downloadsperitem_count_idx ON downloadsperitem (count);
+
+CREATE index item_handle_idx ON item (handle);
+CREATE index collection_handle_idx ON collection (handle);
+CREATE index community_handle_idx ON community (handle);
