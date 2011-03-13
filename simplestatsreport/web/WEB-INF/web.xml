@@ -36,6 +36,15 @@
         <servlet-name>front</servlet-name>
         <url-pattern>/front</url-pattern>
     </servlet-mapping>
+    <servlet>
+        <servlet-name>rest</servlet-name>
+        <description>Return data for given handle in JSON format</description>
+        <servlet-class>fi.helsinki.lib.simplestatsreporter.JSON</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>rest</servlet-name>
+        <url-pattern>/rest</url-pattern>
+    </servlet-mapping>
     <welcome-file-list>
         <welcome-file>front</welcome-file>
     </welcome-file-list>

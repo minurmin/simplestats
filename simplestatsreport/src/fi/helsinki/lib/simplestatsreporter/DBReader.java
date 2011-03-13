@@ -247,6 +247,75 @@ public class DBReader {
 	}
     }
 
+    /* NOTE: Be sure to check the handle before passing it to the methods
+       handleToItemId(), handleToCollectionId() and handleToCommunityId(),
+       because they don't check it.... so if that string contains something
+       like DROP say goodbye to your data!  */
+
+    public static int handleToItemId(Statement stmt, String handle)
+	throws SQLException {
+	return handleToId(stmt, handle, "item");
+    }
+
+    public static int handleToCollectionId(Statement stmt, String handle)
+	throws SQLException {
+	return handleToId(stmt, handle, "collection");
+    }
+
+    public static int handleToCommunityId(Statement stmt, String handle)
+	throws SQLException {
+	return handleToId(stmt, handle, "community");
+    }
+
+    private static int handleToId(Statement stmt, String handle, String ob)
+	throws SQLException {
+	ResultSet rs;
+	String q = "SELECT * FROM " + ob + " WHERE handle = '" + handle + "'";
+	
+	rs = stmt.executeQuery(q);
+	return (rs.next() ? rs.getInt(ob + "_id") : -1);
+    }
+
+    public static Hashtable<String, Integer> statsForItem(Statement stmt,
+							  int itemId)
+	throws SQLException {
+	return statsFor(stmt, itemId, "item");
+    }
+
+    public static Hashtable<String, Integer>
+	statsForCollection(Statement stmt, int collectionId)
+	throws SQLException {
+	return statsFor(stmt, collectionId, "collection");
+    }
+
+    public static Hashtable<String, Integer>
+	statsForCommunity(Statement stmt, int communityId)
+	throws SQLException {
+	return statsFor(stmt, communityId, "community");
+    }
+
+    private static Hashtable<String, Integer> statsFor(Statement stmt,
+						       int obId, String ob)
+	throws SQLException {
+	Hashtable<String, Integer> stats = new Hashtable<String, Integer>();
+	int sum = 0;
+	ResultSet rs;
+	String q = ("SELECT * FROM " + 
+		    "downloadsper" + ob + " WHERE " +
+		    ob + "_id = " + Integer.toString(obId));
+	
+	rs = stmt.executeQuery(q);
+	while (rs.next()) {
+	    String time = Integer.toString(rs.getInt("time"));
+	    int count = rs.getInt("count");
+	    
+	    stats.put(time, count);
+	    sum += count;
+	}
+	stats.put("sum", sum);
+	return stats;
+    }
+    
 }
 
 	
