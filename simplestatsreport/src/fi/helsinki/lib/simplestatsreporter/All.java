@@ -104,12 +104,12 @@ public class All extends SimpleStatsReporter {
     public String htmlContent(Statement stmt, HttpServletRequest request)
 	throws SQLException {
 	
-	int startTime =
-	    Integer.parseInt(request.getParameter("start_time"));
-	int stopTime =
-	    Integer.parseInt(request.getParameter("stop_time"));
-	int communityId =
-	    Integer.parseInt(request.getParameter("community_id"));
+	Integer[] times = DBReader.readTimes(stmt);
+	int startTime = Misc.getStartTime(times, request);
+	int stopTime = Misc.getStopTime(times, request);
+
+        // default to all dspace
+	int communityId = Misc.getNumber(0, request, "community_id");
 	
 	Hashtable<Integer, Community> communities =
 	    DBReader.readCommunities(stmt);
@@ -124,6 +124,7 @@ public class All extends SimpleStatsReporter {
 	DBReader.setRelations(stmt, communities, collections, items);
 	
 	Node node = communities.get(communityId);
+        if (node==null) return "<p>No community with id "+communityId+"<p>";
 	
 	return(printTable(node, startTime, stopTime) +
 	       printTopItems(node, startTime, stopTime, 10));

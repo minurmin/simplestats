@@ -68,13 +68,14 @@ public class PerCollection extends SimpleStatsReporter {
     public String htmlContent(Statement stmt, HttpServletRequest request)
 	throws SQLException {
 
-	int collectionId = Integer.parseInt(request.getParameter("id"));
-	int startTime =
-	    Integer.parseInt(request.getParameter("start_time"));
-	int stopTime =
-	    Integer.parseInt(request.getParameter("stop_time"));
+        // default collection 1
+	int collectionId = Misc.getNumber(1, request, "id");
 
-	Hashtable<Integer, Community> communities =
+	Integer[] times = DBReader.readTimes(stmt);
+	int startTime = Misc.getStartTime(times, request);
+	int stopTime = Misc.getStopTime(times, request);
+
+        Hashtable<Integer, Community> communities =
 	    DBReader.readCommunities(stmt);
 	Hashtable<Integer, Collection> collections =
 	    DBReader.readCollections(stmt);
@@ -85,8 +86,10 @@ public class PerCollection extends SimpleStatsReporter {
 
 	DBReader.setRelations(stmt, communities, collections, items);
 
+        Collection collection = collections.get(collectionId);
+        if (collection==null) return "<p>No collection with id "+collectionId+"<p>";
 
-	return printItems(collections.get(collectionId),
+	return printItems(collection,
 			  startTime, stopTime);
     }
 }

@@ -82,13 +82,18 @@ public class PerCommunity extends SimpleStatsReporter {
     public String htmlContent(Statement stmt, HttpServletRequest request)
 	throws SQLException {
 
-	int communityId = Integer.parseInt(request.getParameter("id"));
-	int startTime =
-	    Integer.parseInt(request.getParameter("start_time"));
-	int stopTime =
-	    Integer.parseInt(request.getParameter("stop_time"));
+        // default to all dspace (which will be suppressed for performance reasons)
+	int communityId = Misc.getNumber(0, request, "id");
 
-	Hashtable<Integer, Community> communities =
+        if (communityId == 0) {
+          return "<p>Detailed statistics for the entire DSpace repository is not permitted. Please select a community or a collection.</p>";
+        }
+
+	Integer[] times = DBReader.readTimes(stmt);
+	int startTime = Misc.getStartTime(times, request);
+	int stopTime = Misc.getStopTime(times, request);
+
+        Hashtable<Integer, Community> communities =
 	    DBReader.readCommunities(stmt);
 	Hashtable<Integer, Collection> collections =
 	    DBReader.readCollections(stmt);
@@ -98,6 +103,8 @@ public class PerCommunity extends SimpleStatsReporter {
 
         ArrayList<Integer> collectionIDs = new ArrayList<Integer>();
         ArrayList<Node> allItems = new ArrayList<Node>();
+        Community community = communities.get(communityId);
+        if (community==null) return "<p>No community with id "+communityId+"<p>";
         findAllItemsFor(communities.get(communityId), allItems, collectionIDs);
         for (int thisCollectionID : collectionIDs) {
             DBReader.readItemsStatsForCollection(stmt, items, thisCollectionID,

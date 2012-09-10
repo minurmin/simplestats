@@ -1,6 +1,7 @@
 package fi.helsinki.lib.simplestatsreporter;
 
 import java.io.*;
+import javax.servlet.http.*;
 
 public class Misc {
     public static String fi(String s) {
@@ -31,4 +32,32 @@ public class Misc {
 	
 	return out.toString();
     }
+
+    public static int getNumber(int defaultNum, HttpServletRequest request, String param) {
+        String num = request.getParameter(param);
+        if ((num!=null) && (num.length()>0)) {
+          try {
+            return Integer.parseInt(num);
+          }
+          catch (NumberFormatException e) {
+          }
+        }
+        return defaultNum;
+    }
+
+    /**
+     * By default we show last 12 months (if we have statistics for
+     * that many months)
+     */
+    public static int getStartTime(Integer[] times, HttpServletRequest request) {
+        return getNumber(times[(times.length > 12) ? times.length - 12 : 0], request, "start_time");
+    }
+
+    /**
+     * Defaults to last month
+     */
+    public static int getStopTime(Integer[] times, HttpServletRequest request) {
+        return getNumber(times[times.length-1], request, "stop_time");
+    }
+
 }
