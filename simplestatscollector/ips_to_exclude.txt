@@ -2,7 +2,13 @@
 # - his Apache log
 # - http://www.iplists.com/
 # - http://www.ihategoogle.org/?p=56
+# + additions from Doria log files.
 
+66.249.76
+95.108.247.252
+119.63.196
+157.55.33.44
+157.56.93.201
 114.111.36.26
 119.235.237.17
 119.235.237.18
