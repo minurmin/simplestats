@@ -7,7 +7,7 @@ import javax.servlet.*;
 import javax.servlet.http.*;
 import java.sql.*;
 
-public abstract class SimpleStatsReporter extends HttpServlet {
+public abstract class SimpleStatsReporter extends GetItemsHttpServlet {
 
     public abstract String htmlContent(Statement stmt,
 				       HttpServletRequest request)

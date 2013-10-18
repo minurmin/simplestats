@@ -136,7 +136,7 @@
   <property name="manager.url"   value="http://localhost:8180/manager"/>
   <property name="src.home"      value="${basedir}/src"/>
   <property name="web.home"      value="${basedir}/web"/>
-
+  <property name="lib.dir"       value="${basedir}/web/WEB-INF/lib"/>
 
 <!-- ================== Custom Ant Task Definitions ======================= -->
 
@@ -227,6 +227,7 @@
 -->
 
   <path id="compile.classpath">
+    <fileset dir="${lib.dir}" includes="**/*.jar"/>
 
     <!-- Include all JAR files that will be included in /WEB-INF/lib -->
     <!-- *** CUSTOMIZE HERE AS REQUIRED BY YOUR APPLICATION *** -->

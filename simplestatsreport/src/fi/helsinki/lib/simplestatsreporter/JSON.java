@@ -5,8 +5,23 @@ import java.io.*;
 import javax.servlet.*;
 import javax.servlet.http.*;
 import java.sql.*;
+import org.json.simple.JSONObject;
+import org.json.simple.JSONArray;
 
-public class JSON extends HttpServlet {
+public class JSON extends GetItemsHttpServlet {
+
+    // As suggested on Stack Overflow:
+    @SuppressWarnings("unchecked")
+    private final static Map<Object,Object> asMap(JSONObject j)
+    {
+	return j;
+    }
+
+    @SuppressWarnings("unchecked")
+    private final static List<Object> asList(JSONArray j)
+    {
+	return j;
+    }
 
     private static final String validChars = "0123456789/";
 
@@ -54,8 +69,57 @@ public class JSON extends HttpServlet {
 					       Config.DATABASE_PASSWORD);
 	    stmt = conn.createStatement();
 
+	    String topString = request.getParameter("top");
+	    String startTimeString = request.getParameter("top_start_time");
+	    String stopTimeString = request.getParameter("top_stop_time");
+	    Integer[] times = DBReader.readTimes(stmt);
+
+	    // Default values (used when paremeters are not given):
+	    int top = 0; // This has to be 0 to indicate that we don't want
+	                 // information about top items.
+	    int startTime = times[0];
+	    int stopTime = times[times.length-1];
+
+	    if (topString != null) {
+		try {
+		    top = Integer.parseInt(topString);
+		}
+		catch (NumberFormatException e) {
+		    response.setContentType("text/plain");
+		    response.sendError(response.SC_BAD_REQUEST,
+				       "Bad value for 'top' parameter.");
+		    return;
+		}
+	    }
+
+	    if (startTimeString != null) {
+		try {
+		    startTime = Integer.parseInt(startTimeString);
+		}
+		catch (NumberFormatException e) {
+		    response.setContentType("text/plain");
+		    response.sendError(response.SC_BAD_REQUEST,
+				       "Bad value for 'top_start_time' parameter.");
+		    return;
+		}
+	    }
+
+	    if (stopTimeString != null) {
+		try {
+		    stopTime = Integer.parseInt(stopTimeString);
+		}
+		catch (NumberFormatException e) {
+		    response.setContentType("text/plain");
+		    response.sendError(response.SC_BAD_REQUEST,
+				       "Bad value for 'top_stop_time' parameter.");
+		    return;
+		}
+	    }
+
+
 	    try {
-		out.println(getDownloadNumberForHandle(stmt, handle));
+		out.println(getDownloadNumberForHandle(stmt, handle, top,
+						       startTime, stopTime));
 	    }
 	    catch (UnknownHandleException e) {
  		response.setContentType("text/plain");
@@ -91,34 +155,40 @@ public class JSON extends HttpServlet {
 	}
     }
 
-    private String getDownloadNumberForHandle(Statement stmt, String handle)
+    private String getDownloadNumberForHandle(Statement stmt, String handle,
+					      int top,
+					      int startTime, int stopTime)
 	throws UnknownHandleException, SQLException {
 
 	Hashtable<String, Integer> stats = null;
+	int itemId = -1;
+	int collectionId = -1;
+	int communityId = -1;
 
 	if (handle.equals("0")) {
 	    /* A special case: the whole DSpace does not have a handle, but
 	       in the database we represent the whole DSpace as a community (
 	       with id 0). */
 	    stats = DBReader.statsForCommunity(stmt, 0);
+	    communityId = 0;
 	}
 	else {
 	    /* A normal case: we have a handle but we don't know if that
 	       belongs to a community, a collection or an item... so we
 	       go through all the options until we find what it is. */
 
-	    int itemId = DBReader.handleToItemId(stmt, handle);
+	    itemId = DBReader.handleToItemId(stmt, handle);
        
 	    if (itemId != -1) {
 		stats = DBReader.statsForItem(stmt, itemId);
 	    }
 	    else {
-		int collectionId = DBReader.handleToCollectionId(stmt, handle);
+		collectionId = DBReader.handleToCollectionId(stmt, handle);
 		if (collectionId != -1) {
 		    stats = DBReader.statsForCollection(stmt, collectionId);
 		}
 		else {
-		    int communityId = DBReader.handleToCommunityId(stmt,
+		    communityId = DBReader.handleToCommunityId(stmt,
 								   handle);
 		    if (communityId != -1) {
 			stats = DBReader.statsForCommunity(stmt, communityId);
@@ -130,18 +200,58 @@ public class JSON extends HttpServlet {
 	    }
 	}
 
-	// Finally return a JSON representation of the hashtable:
-	StringBuffer out = new StringBuffer();
-	out.append("{");
+	JSONObject obj = new JSONObject();
 	for (String key: stats.keySet()) {
-	    out.append("\"" + key + "\":");
-	    out.append(stats.get(key));
-	    out.append(",");
+	    asMap(obj).put(key, stats.get(key));
 	}
-	int length = out.length();
-	out.replace(length-1, length, "}");
 
-	return out.toString();
-    
+	Node node;
+	if (top > 0) {
+	    Hashtable<Integer, Community> communities = DBReader.readCommunities(stmt);
+	    Hashtable<Integer, Collection> collections = DBReader.readCollections(stmt);
+	    Hashtable<Integer, Item> items = DBReader.readItems(stmt);
+
+	    DBReader.readCommunitiesStats(stmt, communities, startTime, stopTime);
+	    DBReader.readCollectionsStats(stmt, collections, startTime, stopTime);
+	    DBReader.readItemsStats(stmt, items, startTime, stopTime);
+
+	    DBReader.setRelations(stmt, communities, collections, items);
+
+	    if (itemId != -1) {
+		node = items.get(itemId);
+	    }
+	    else if (collectionId != -1) {
+		node = collections.get(collectionId);
+	    }
+	    else {
+		node = communities.get(communityId);
+	    }
+
+	    ArrayList<Item> itemList = getItems(node);
+	    ArrayList<IntItemPair>intItemPairs = new ArrayList<IntItemPair>();
+	    for (Item item : itemList) {
+		int count = 0;
+		for (int time : new TimeSpan(startTime, stopTime)) {
+		    count += item.getCounter(time);
+		}
+
+		intItemPairs.add(new IntItemPair(count, item));
+	    }
+	    Collections.sort(intItemPairs, IntItemPair.REV_NUMBER_ORDER);
+	    int nItems = Math.min(intItemPairs.size(), top);
+
+	    JSONArray topList = new JSONArray();
+	    String prefix = Config.DSPACE_URL + "/handle/";
+	    for (int i=0; i < nItems; i++) {
+		JSONObject item = new JSONObject();
+		IntItemPair pair = intItemPairs.get(i);
+		asMap(item).put("name", pair.item.getName());
+		asMap(item).put("url", prefix + pair.item.getHandle());
+		asMap(item).put("count", pair.integer);
+		asList(topList).add(item);
+	    }
+	    asMap(obj).put("top", topList);
+	}
+	return obj.toJSONString();
     }
 }

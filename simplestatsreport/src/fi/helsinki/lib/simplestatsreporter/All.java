@@ -58,34 +58,6 @@ public class All extends SimpleStatsReporter {
 	return out.toString();
     }
 
-    private ArrayList<Item> getItems(Node node) {
-	ArrayList<Item> retVal = new ArrayList<Item>();
-	if (node instanceof Item) {
-	    retVal.add((Item)node);
-	}
-	for (Node child : node.getChildren()) {
-	    retVal.addAll(getItems(child));
-	}
-	return retVal;
-    }
-
-    private class IntItemPair {
-	public Integer integer;
-	public Item item;
-
-	public IntItemPair(int intgr, Item itm) {
-	    integer = intgr;
-	    item = itm;
-	}
-    }
-
-    static final Comparator<IntItemPair> REV_NUMBER_ORDER =
-	new Comparator<IntItemPair>() {
-	public int compare(IntItemPair pair1, IntItemPair pair2) {
-	    return pair2.integer.compareTo(pair1.integer);
-	}
-    };
-
     private String printTopItems(Node root, int startTime, int stopTime,
 				 int nItems) {
 	StringWriter out = new StringWriter();
@@ -99,7 +71,7 @@ public class All extends SimpleStatsReporter {
 
 	    intItemPairs.add(new IntItemPair(count, item));
 	}
-	Collections.sort(intItemPairs, REV_NUMBER_ORDER);
+	Collections.sort(intItemPairs, IntItemPair.REV_NUMBER_ORDER);
 	int n = Math.min(intItemPairs.size(), nItems);
 
 	out.write("<h2>Top " + n + " downloads for this community (" +
