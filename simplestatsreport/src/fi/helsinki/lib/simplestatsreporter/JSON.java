@@ -1,5 +1,7 @@
 package fi.helsinki.lib.simplestatsreporter;
 
+import java.lang.System;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.*;
 import java.io.*;
 import javax.servlet.*;
@@ -9,6 +11,10 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONArray;
 
 public class JSON extends GetItemsHttpServlet {
+
+    static long cacheValidUntil = 0;
+    static ConcurrentHashMap<String, String> cache = 
+	new ConcurrentHashMap<String, String>();
 
     // As suggested on Stack Overflow:
     @SuppressWarnings("unchecked")
@@ -61,6 +67,31 @@ public class JSON extends GetItemsHttpServlet {
 	Connection conn = null;
 	Statement stmt = null;
 	try {
+	    String topString = request.getParameter("top");
+	    String startTimeString = request.getParameter("top_start_time");
+	    String stopTimeString = request.getParameter("top_stop_time");
+
+	    String cache_key =
+		String.format("%s|%s|%s|%s",
+			      handle,
+			      (topString != null) ? topString : "",
+			      (startTimeString != null) ? startTimeString : "",
+			      (stopTimeString != null) ? stopTimeString : "");
+	    if (System.currentTimeMillis() <= cacheValidUntil) {
+		String cache_value = cache.get(cache_key);
+		if (cache_value != null) {
+		    out.println(cache_value);
+		    return;
+		}
+	    }
+	    else {
+		cache.clear();
+		synchronized(this) {
+		    // 24 hours from now on.
+		    cacheValidUntil = System.currentTimeMillis() + 1000*60*60*24;
+		}
+	    }
+	    
 	    try { Class.forName(Config.DATABASE_DRIVER); }
 	    catch (Exception e) { ; }
 
@@ -69,9 +100,6 @@ public class JSON extends GetItemsHttpServlet {
 					       Config.DATABASE_PASSWORD);
 	    stmt = conn.createStatement();
 
-	    String topString = request.getParameter("top");
-	    String startTimeString = request.getParameter("top_start_time");
-	    String stopTimeString = request.getParameter("top_stop_time");
 	    Integer[] times = DBReader.readTimes(stmt);
 
 	    // Default values (used when paremeters are not given):
@@ -118,8 +146,10 @@ public class JSON extends GetItemsHttpServlet {
 
 
 	    try {
-		out.println(getDownloadNumberForHandle(stmt, handle, top,
-						       startTime, stopTime));
+		String value = getDownloadNumberForHandle(stmt, handle, top,
+							  startTime, stopTime);
+		cache.put(cache_key, value);
+		out.println(value);
 	    }
 	    catch (UnknownHandleException e) {
  		response.setContentType("text/plain");
