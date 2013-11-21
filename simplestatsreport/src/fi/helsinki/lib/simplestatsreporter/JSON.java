@@ -52,6 +52,7 @@ public class JSON extends GetItemsHttpServlet {
 	throws IOException, ServletException
     {
 	response.setContentType("application/json"); // As defined in RFC 4627
+	response.setHeader("Access-Control-Allow-Origin", "*");
 	PrintWriter out = response.getWriter();
 
 	String handle = request.getParameter("handle");
