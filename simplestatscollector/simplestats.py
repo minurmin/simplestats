@@ -26,9 +26,12 @@ import os
 import sys
 import re
 import types
-from sets import ImmutableSet
 from datetime import date
 from stat import ST_MTIME
+try:
+    frozenset
+except NameError:
+    from sets import ImmutableSet as frozenset
 
 from simplestats_config import config # Our configuration information.
 
@@ -311,7 +314,7 @@ def read_ip_exclude_file(ip_exclude_file):
     for ip in ips:
         ips_to_exclude[ip.count('.')].append(ip)
 
-    return [ImmutableSet(ips_to_exclude[x]) for x in range(4)]
+    return [frozenset(ips_to_exclude[x]) for x in range(4)]
 
 def count_downloads_from_logs(ip_exclude_file, log_dir, bitstreams,
                               trust_mtime=False,
@@ -422,8 +425,8 @@ def update_download_table(cursor, table_name, id_column_name, nodes, time):
     names = id_column_name + ', time, count'
     cursor.execute("SELECT %s FROM %s" % (names, table_name))
     rows = cursor.fetchall()
-    existing_triples = ImmutableSet([tuple(x) for x in rows])
-    existing_pairs = ImmutableSet([(x[0], x[1]) for x in rows])
+    existing_triples = frozenset([tuple(x) for x in rows])
+    existing_pairs = frozenset([(x[0], x[1]) for x in rows])
 
     insert_string = ("INSERT INTO %s (%s) VALUES (%%s, %s, %%s)" %
                      (table_name, names, time))
@@ -447,8 +450,8 @@ def update_id_name_handle_etc_table(cursor, table_name, id_column_name, nodes):
     names = id_column_name + ', name, handle, n_items, n_bitstreams, n_bytes'
     cursor.execute("SELECT %s FROM %s" % (names, table_name))
     rows = cursor.fetchall()
-    existing_ids = ImmutableSet([x[0] for x in rows])
-    existing_tuples = ImmutableSet([tuple(x) for x in rows])
+    existing_ids = frozenset([x[0] for x in rows])
+    existing_tuples = frozenset([tuple(x) for x in rows])
 
     insert_string = ("INSERT INTO %s (%s) " +
                      "VALUES (%%s, %%s, %%s, %%s, %%s, %%s)") % (table_name,
@@ -477,8 +480,8 @@ def update_parent_child_table(cursor, table_name,
     cursor.execute("SELECT %s, %s FROM %s" % (parent_column_name,
                                               child_column_name, table_name))
     rows = cursor.fetchall()
-    existing_pairs = ImmutableSet([tuple(row) for row in rows])
-    existing_child_ids = ImmutableSet([row[1] for row in rows])
+    existing_pairs = frozenset([tuple(row) for row in rows])
+    existing_child_ids = frozenset([row[1] for row in rows])
 
     insert_string = ("INSERT INTO %s (%s, %s) VALUES (%%s, %%s)" %
                      (table_name, parent_column_name, child_column_name))
