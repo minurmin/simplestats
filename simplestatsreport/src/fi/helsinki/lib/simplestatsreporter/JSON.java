@@ -51,7 +51,7 @@ public class JSON extends GetItemsHttpServlet {
     public void doGet(HttpServletRequest request, HttpServletResponse response)
 	throws IOException, ServletException
     {
-	response.setContentType("application/json"); // As defined in RFC 4627
+	response.setContentType("application/json;charset=utf-8");
 	response.setHeader("Access-Control-Allow-Origin", "*");
 	PrintWriter out = response.getWriter();
 
