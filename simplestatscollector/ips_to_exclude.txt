@@ -5,6 +5,7 @@
 # + additions from Doria log files.
 # + additions from Theseus log files.
 
+82.215.213.228
 199.36.240.22
 220.181.108
 207.46
