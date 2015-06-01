@@ -31,6 +31,8 @@ from stat import ST_MTIME
 try:
     frozenset
 except NameError:
+    # For Python versions < 2.6
+    from sets import Set as set
     from sets import ImmutableSet as frozenset
 
 from simplestats_config import config # Our configuration information.
@@ -322,7 +324,8 @@ def count_downloads_from_logs(ip_exclude_file, log_dir, bitstreams,
 
     ips_to_exclude = read_ip_exclude_file(ip_exclude_file)
     pattern = re.compile('ip_addr=(.*?):')
-
+    downloads = set()
+    
     for filename in glob.glob(os.path.join(log_dir, 'dspace.log*')):
 
         if trust_mtime:
@@ -337,17 +340,7 @@ def count_downloads_from_logs(ip_exclude_file, log_dir, bitstreams,
         
         f = open(filename, 'r')
 
-        prev_line = ''
-        prev_item = None
-        prev_bitstream_id = None
         for line in f.readlines():
-
-            # We skip log lines that are duplicates.
-            if line[24:] == prev_line[24:]: # Ignore date and time
-                #                             on comparison.
-                continue
-            else:
-                prev_line = line
 
             try:
                 log_line = LogLine(line)
@@ -390,20 +383,13 @@ def count_downloads_from_logs(ip_exclude_file, log_dir, bitstreams,
                 if not bitstream.is_original_bitstream():
                     continue
                 item = bitstream.parent
-                if item == prev_item and bitstream_id != prev_bitstream_id:
-                    # An item with many bitstreams: If several of those
-                    # bitstreams are downloaded at a "same time"(*), count
-                    # them as only one download.
-                    #
-                    # (*) As you can see from the code, "same time" really
-                    # means consecutive lines in the log files.
-                    pass
-                else:
-                    bitstreams[bitstream_id].inc_counter(log_line.get_time())
-
-                prev_bitstream_id = bitstream_id
-                prev_item = item
-
+                log_line_time = log_line.get_time()
+                t = log_line.ip_addr, log_line_time, bitstream_id
+                if t not in downloads:
+                    # For each bitstream, we count at most one
+                    # download per ip per month.
+                    bitstreams[bitstream_id].inc_counter(log_line_time)
+                    downloads.add(t)
             
         f.close()
 
