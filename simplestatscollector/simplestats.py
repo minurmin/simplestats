@@ -26,7 +26,7 @@ import os
 import sys
 import re
 import types
-from datetime import date
+from datetime import date, datetime, timedelta
 from stat import ST_MTIME
 try:
     frozenset
@@ -40,18 +40,21 @@ from simplestats_config import config # Our configuration information.
 class LogLine:
     def __init__(self, line):
 
-        m = re.match('(....)-(..)-(..) \S* (\S*)  (\S*) @ (.*)', line)
+        m = re.match('(....)-(..)-(..) (..):(..):(..),(...) (\S*)  (\S*) @ (.*)', line)
         if m:
-            year, month, day, level, klass, rest = m.groups()
+            year, month, day, hour, minute, second, millisecond, level, klass, rest = m.groups()
             try:
+                dt = datetime(int(year), int(month), int(day), int(hour),
+                              int(minute), int(second), int(millisecond)*1000)
                 action = rest.split(':')[3]
                 ip_addr = rest.split(':')[2].split('=')[1]
-            except IndexError:
+            except:
                 raise ValueError
 
             self.year = int(year)
             self.month = int(month)
             self.day = int(day)
+            self.dt = dt
             self.level = level
             self.klass = klass
             self.line = line
@@ -325,6 +328,7 @@ def count_downloads_from_logs(ip_exclude_file, log_dir, bitstreams,
     ips_to_exclude = read_ip_exclude_file(ip_exclude_file)
     pattern = re.compile('ip_addr=(.*?):')
     downloads = set()
+    last_download = {}
     
     for filename in glob.glob(os.path.join(log_dir, 'dspace.log*')):
 
@@ -382,7 +386,16 @@ def count_downloads_from_logs(ip_exclude_file, log_dir, bitstreams,
                     continue
                 if not bitstream.is_original_bitstream():
                     continue
-                item = bitstream.parent
+
+                exclude_this_line = False
+                if last_download.has_key(log_line.ip_addr):
+                    delta = log_line.dt - last_download[log_line.ip_addr]
+                    if delta < timedelta(seconds=1):
+                        exclude_this_line = True
+                last_download[log_line.ip_addr] = log_line.dt
+                if exclude_this_line:
+                    continue
+                
                 log_line_time = log_line.get_time()
                 t = log_line.ip_addr, log_line_time, bitstream_id
                 if t not in downloads:
