@@ -34,7 +34,7 @@ def main(argv=None):
     start_time = str(start_year) + ('%2d' % start_month).replace(' ', '0')
     stop_time = str(stop_year) + ('%2d' % stop_month).replace(' ', '0')
         
-    simplestats.main(['', start_time, stop_time])
+    simplestats.main(['', '--new', start_time, stop_time])
 
 
 if __name__ == '__main__':

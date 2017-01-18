@@ -157,10 +157,13 @@ class Bitstream(LeafNode):
         except AttributeError:
             return True
 
-def create_objects(cursor):
+def create_objects(cursor, new_db_format):
     """Checks the database to see what communities, collections, items, and
     bitstreams we have there and constructs corresponding objects (and put
     them into trees...)
+
+    new_db_format = True   # DSpace version 5
+    new_db_format = False  # DSpace version 3
 
     Returns a 4-tuple of dicts."""
 
@@ -177,10 +180,28 @@ def create_objects(cursor):
     for handle, resource_type_id, resource_id in cursor.fetchall():
         handles[resource_type_id][resource_id] = handle
 
+
+    cursor.execute("SELECT metadata_schema_id FROM metadataschemaregistry " +
+                   "WHERE short_id = 'dc' ")
+    metadata_schema_id = cursor.fetchone()[0]
+
+    cursor.execute("SELECT metadata_field_id FROM metadatafieldregistry " +
+                   "WHERE metadata_schema_id = %d " % metadata_schema_id + 
+                   "AND element = 'title' AND qualifier IS NULL ")
+    metadata_field_id = cursor.fetchone()[0]
+        
     # Create objects...
 
     h = handles[COMMUNITY]
-    cursor.execute("SELECT community_id, name  from community")
+    if new_db_format:
+        s = ("SELECT community.community_id, metadatavalue.text_value " +
+             "FROM community, metadatavalue " +
+             "WHERE community.community_id = metadatavalue.resource_id " +
+             "AND metadatavalue.resource_type_id = 4 " +
+             "AND metadatavalue.metadata_field_id = %d " % metadata_field_id)
+    else:
+        s = "SELECT community_id, name from community"
+    cursor.execute(s)
     for community_id, name in cursor.fetchall():
         communities[community_id] = Community(community_id, name,
                                               h[community_id])
@@ -191,17 +212,34 @@ def create_objects(cursor):
     communities[0] = Community(0, 'The entire DSpace')
 
     h = handles[COLLECTION]
-    cursor.execute("SELECT collection_id, name from collection")
+    if new_db_format:
+        s = ("SELECT collection.collection_id, metadatavalue.text_value " +
+             "FROM collection, metadatavalue " +
+             "WHERE collection.collection_id = metadatavalue.resource_id " +
+             "AND metadatavalue.resource_type_id = 3 " +
+             "AND metadatavalue.metadata_field_id = %d " % metadata_field_id)
+    else:
+        s = "SELECT collection_id, name from collection"
+    cursor.execute(s)
     for collection_id, name in cursor.fetchall():
         collections[collection_id] = Collection(collection_id, name,
                                                 h[collection_id])
 
     h = handles[ITEM]
-    cursor.execute("SELECT item.item_id, dcvalue.text_value " +
-                   "FROM item, dcvalue " +
-                   "WHERE item.item_id = dcvalue.item_id " +
-                   "AND dcvalue.dc_type_id = 64 " +
-                   "AND item.in_archive = TRUE")
+    if new_db_format:
+        s = ("SELECT item.item_id, metadatavalue.text_value " +
+             "FROM item, metadatavalue " +
+             "WHERE item.item_id = metadatavalue.resource_id " +
+             "AND metadatavalue.resource_type_id = 2 " +
+             "AND metadatavalue.metadata_field_id = %d " % metadata_field_id +
+             "AND item.in_archive = TRUE ")
+    else: # TODO: Do we need this?
+        s = ("SELECT item.item_id, dcvalue.text_value " +
+             "FROM item, dcvalue " +
+             "WHERE item.item_id = dcvalue.item_id " +
+             "AND dcvalue.dc_type_id = 64 " %
+             "AND item.in_archive = TRUE ")
+    cursor.execute(s)
     for item_id, name in cursor.fetchall():
         items[item_id] = Item(item_id, name, h[item_id])
 
@@ -261,7 +299,15 @@ def create_objects(cursor):
         item.add_child(bitstream)
 
     bundle_types = {}
-    cursor.execute("SELECT bundle_id, name FROM bundle")
+    if new_db_format:
+        s = ("SELECT bundle_id, metadatavalue.text_value " +
+             "FROM bundle, metadatavalue " +
+             "WHERE bundle.bundle_id = metadatavalue.resource_id " +
+             "AND metadatavalue.resource_type_id = 1 " +
+             "AND metadatavalue.metadata_field_id = %d " % metadata_field_id)
+    else:
+        s = "SELECT bundle_id, name FROM bundle"
+    cursor.execute(s)
     for bundle_id, name in cursor.fetchall():
         bundle_types[bundle_id] = name
 
@@ -604,8 +650,14 @@ def main(argv=None):
         argv = sys.argv
 
     try:
-        start_time = int(argv[1])
-        stop_time = int(argv[2])
+        if argv[1] == "--old":
+            new_db_format = False
+        elif argv[1] == "--new":
+            new_db_format = True
+        else:
+            raise ValueError
+        start_time = int(argv[2])
+        stop_time = int(argv[3])
         # Some sanity checks for input... we don't believe that anyone has
         # logs dated before year 1900.
         if (start_time % 100 not in range(1,13) or start_time / 100 < 1900 or
@@ -613,14 +665,19 @@ def main(argv=None):
             start_time > stop_time):
             raise ValueError
     except:
-        msg = """Usage: %s start_time stop_time
+        msg = """Usage: %s --old start_time stop_time
+                  or  : %s --new start_time stop_time
 
 Gather monthly statistics between start_time and stop_time (including those
 months). The month numbers must be prefixed by year. For example, to gather
 statistics between April 2007 and December 2008:
 
-%s 200704 200812
-""" % (argv[0], argv[0])
+%s --old 200704 200812
+
+  -- old   Old DSpace database format (DSpace 3.x)
+  -- new   New DSpace database format (DSpace 5.x)
+
+""" % (argv[0], argv[0], argv[0])
         print >>sys.stderr, msg
         return 1
 
@@ -632,7 +689,8 @@ statistics between April 2007 and December 2008:
     print "Reading from the database..."
     db = connect_to_db(input_db)
     cursor = db.cursor()
-    communities, collections, items, bitstreams = create_objects(cursor)
+    communities, collections, items, bitstreams = create_objects(cursor,
+                                                                 new_db_format)
     db.close()
 
     print "Reading log files..."
