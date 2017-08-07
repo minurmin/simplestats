@@ -7,7 +7,7 @@ public class Node {
 
     static final Comparator<Node> NAME_ORDER = new Comparator<Node>() {
         public int compare(Node n1, Node n2) {
-            return Misc.fi(n1.getName()).compareTo(Misc.fi(n2.getName()));
+            return Misc.fi(n1.getName()).toLowerCase().compareTo(Misc.fi(n2.getName()).toLowerCase());
         }
     };
 

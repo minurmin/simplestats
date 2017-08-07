@@ -1,11 +1,11 @@
 Simplestats - collect and display DSpace monthly download statistics
 --------------------------------------------------------------------
 
-Copyright (C) 2009-2011 Jyrki Ilva
+Copyright (C) 2009-2017 Jyrki Ilva
                         Joonas Kesäniemi
                         Markos Mevorah
                         Tiina Pasanen
-                        Janne Pietarila
+                        Emma Pietarila
                         Wouter Van Hemel
                         Samu Viita
 
