@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app version="2.4" xmlns="http://java.sun.com/xml/ns/j2ee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd">
+    <servlet>
+        <servlet-name>all</servlet-name>
+        <description>Monthly statistics for communities and collections</description>
+        <servlet-class>fi.helsinki.lib.simplestatsreporter.All</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>all</servlet-name>
+        <url-pattern>/all</url-pattern>
+    </servlet-mapping>
+    <servlet>
+        <servlet-name>percollection</servlet-name>
+        <description>Monthly statistics for items in one collection</description>
+        <servlet-class>fi.helsinki.lib.simplestatsreporter.PerCollection</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>percollection</servlet-name>
+        <url-pattern>/percollection</url-pattern>
+    </servlet-mapping>
+    <servlet>
+        <servlet-name>percommunity</servlet-name>
+        <description>Monthly statistics for items in one community</description>
+        <servlet-class>fi.helsinki.lib.simplestatsreporter.PerCommunity</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>percommunity</servlet-name>
+        <url-pattern>/percommunity</url-pattern>
+    </servlet-mapping>
+    <servlet>
+        <servlet-name>front</servlet-name>
+        <description>Simple statistics front page</description>
+        <servlet-class>fi.helsinki.lib.simplestatsreporter.FrontPage</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>front</servlet-name>
+        <url-pattern>/front</url-pattern>
+    </servlet-mapping>
+    <servlet>
+        <servlet-name>rest</servlet-name>
+        <description>Return data for given handle in JSON format</description>
+        <servlet-class>fi.helsinki.lib.simplestatsreporter.JSON</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>rest</servlet-name>
+        <url-pattern>/rest</url-pattern>
+    </servlet-mapping>
+    <welcome-file-list>
+        <welcome-file>front</welcome-file>
+    </welcome-file-list>
+</web-app>
